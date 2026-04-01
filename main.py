@@ -10,8 +10,7 @@ from database.db_connection import engine, SessionFactory
 
 models.Base.metadata.create_all(bind=engine)
 
-# 임시 메모리 저장소 (테스트용)
-todos_db = []
+
 
 def get_db():
     session = SessionFactory()
@@ -48,22 +47,27 @@ def create_todo_handler(body: TodoCreateRequest, session: Session = Depends(get_
     # 3. 결과 반환
     return TodoResponse(id=new_todo.id, title=new_todo.contents, is_done=new_todo.is_done)
 
-@app.patch("/todos/{todo_id}", status_code=status.HTTP_200_OK)
-def update_todo_handler(todo_id: int, body: TodoUpdateRequest):
-    for todo in todos_db:
-        if todo["id"] == todo_id:
-            if body.title is not None:
-                todo["title"] = body.title
-            if body.is_done is not None:
-                todo["is_done"] = body.is_done
-            return todo
-    raise HTTPException(status_code=404, detail="Todo not found")
+@app.patch("/todos/{todo_id}", response_model=TodoResponse, status_code=status.HTTP_200_OK)
+def update_todo_handler(todo_id: int, body: TodoUpdateRequest, session: Session = Depends(get_db)):
+    todo = session.query(models.Todo).filter(models.Todo.id == todo_id).first()
+    if todo is None:
+        raise HTTPException(status_code=404, detail="Todo not found")
+        
+    if body.title is not None:
+        todo.contents = body.title
+    if body.is_done is not None:
+        todo.is_done = body.is_done
+        
+    session.commit()
+    session.refresh(todo)
+    return TodoResponse(id=todo.id, title=todo.contents, is_done=todo.is_done)
 
 @app.delete("/todos/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_todo_handler(todo_id: int):
-    for todo in todos_db:
-        if todo["id"] == todo_id:
-            todos_db.remove(todo)
-            return None
-    
-    raise HTTPException(status_code=404, detail="Todo not found")
+def delete_todo_handler(todo_id: int, session: Session = Depends(get_db)):
+    todo = session.query(models.Todo).filter(models.Todo.id == todo_id).first()
+    if todo is None:
+        raise HTTPException(status_code=404, detail="Todo not found")
+        
+    session.delete(todo)
+    session.commit()
+    return None
