@@ -1,2 +1,2 @@
-FAILED: (pymysql.err.OperationalError) (1044, "Access denied for user 'fastapi'@'%' to database 'fastapi_db'")
-(Background on this error at: https://sqlalche.me/e/20/e3q8) @ 2026-04-01 09:48:44.719061
+SUCCESS: Connection successful! @ 2026-04-01 10:03:42.280148
+SUCCESS: Table creation executed!
