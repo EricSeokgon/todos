@@ -4,6 +4,11 @@ from schema.request import TodoCreateRequest, TodoUpdateRequest
 
 app = FastAPI()
 
+import models
+from database.db_connection import engine
+
+models.Base.metadata.create_all(bind=engine)
+
 # 임시 메모리 저장소 (테스트용)
 todos_db = []
 
