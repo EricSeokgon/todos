@@ -30,5 +30,13 @@ def update_todo_handler(todo_id: int, body: TodoUpdateRequest):
             if body.is_done is not None:
                 todo["is_done"] = body.is_done
             return todo
+    raise HTTPException(status_code=404, detail="Todo not found")
+
+@app.delete("/todos/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_todo_handler(todo_id: int):
+    for todo in todos_db:
+        if todo["id"] == todo_id:
+            todos_db.remove(todo)
+            return None
     
     raise HTTPException(status_code=404, detail="Todo not found")
